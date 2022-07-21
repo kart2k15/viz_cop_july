@@ -1,30 +1,19 @@
+import yfinance as yf
 import streamlit as st
-import pandas as pd
-import numpy as np
 
-st.title('Uber pickups in NYC')
+st.title("Simple Stock Price App")
+tickers = ['GME', 'AAPL', 'MSFT', 'GOOG', 'NFLX', 'AMZN']
+ticker_selected = st.selectbox("Select a ticker", tickers)
+tickerData = yf.Ticker(ticker_selected)
+#get the historical prices for this ticker
+tickerDf = tickerData.history(period='1d', start='2015-5-31', end='2022-5-31')
 
-DATE_COLUMN = 'date/time'
-DATA_URL = ('https://s3-us-west-2.amazonaws.com/'
-            'streamlit-demo-data/uber-raw-data-sep14.csv.gz')
+st.subheader("Close Price")
+st.line_chart(tickerDf.Close)
+st.subheader("Volume")
+st.line_chart(tickerDf.Volume)
+st.subheader("Institutional Holders")
+st.write(tickerData.institutional_holders)
 
-
-def load_data(nrows):
-    data = pd.read_csv(DATA_URL, nrows=nrows)
-    lowercase = lambda x: str(x).lower()
-    data.rename(lowercase, axis='columns', inplace=True)
-    data[DATE_COLUMN] = pd.to_datetime(data[DATE_COLUMN])
-    return data
-
-data_load_state = st.text('Loading data...')
-data = load_data(10000)
-data_load_state.text("Done!")
-
-if st.checkbox('Show raw data'):
-    st.subheader('Raw data')
-    st.write(data)
-
-st.subheader('Number of pickups by hour')
-hist_values = np.histogram(data[DATE_COLUMN].dt.hour, bins=24, range=(0,24))[0]
-st.bar_chart(hist_values)
-
+with st.expander("View Stock Wiki", expanded=False):
+    st.write(tickerData.info)
